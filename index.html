@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MN bro's Gaming Dashboard</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 18px;
+    }
+
+    .app { max-width: 1150px; margin: 0 auto; }
+    .header, .footer, .card, .nav button { background: var(--card); border-radius: var(--radius); box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06); }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .eyebrow { color: var(--primary); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 4px; }
+    .powered-by { color: var(--muted); font-size: 14px; font-weight: 800; margin: 6px 0 0; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 0; font-size: clamp(26px, 4vw, 42px); }
+    h2 { margin-bottom: 16px; font-size: 24px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    input, select {
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 11px 14px;
+      font: inherit;
+      outline: none;
+      background: #f8fafc;
+    }
+    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,.15); }
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 11px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+      font: inherit;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .btn { background: var(--primary); color: white; }
+    .btn:hover { background: var(--primary-dark); }
+    .btn-light { background: #eef2ff; color: var(--primary-dark); }
+    .btn-outline { background: white; color: var(--text); border: 1px solid #cbd5e1; }
+
+    .nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }
+    .nav button { color: #334155; }
+    .nav button.active { background: var(--primary); color: white; }
+
+    .card { padding: 20px; box-shadow: var(--shadow); }
+    .hero {
+      background: linear-gradient(135deg, #8b5cf6, #4f46e5, #0ea5e9);
+      color: white;
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 20px;
+      overflow: hidden;
+    }
+    .pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.18); padding: 8px 12px; border-radius: 999px; font-size: 14px; font-weight: 800; }
+    .hero p { color: rgba(255,255,255,.88); line-height: 1.6; }
+    .hero-note { background: rgba(255,255,255,.15); border-radius: 22px; padding: 18px; }
+    .hero-note li { margin: 8px 0; }
+    .game-grid { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
+    .status { background: linear-gradient(90deg, #eff6ff, #eef2ff); border-radius: 18px; padding: 13px; font-weight: 800; margin-bottom: 12px; color: #334155; }
+    .small { color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .hidden { display: none !important; }
+
+    .difficulty { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: #fffbeb; padding: 12px; border-radius: 18px; margin-bottom: 16px; }
+    .difficulty button { background: white; color: #334155; }
+    .difficulty button.active { background: var(--primary); color: white; }
+
+    .chess-board { display: grid; grid-template-columns: repeat(8, 54px); border: 5px solid #fde68a; border-radius: 18px; overflow: hidden; width: fit-content; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+    .square { width: 54px; height: 54px; display: grid; place-items: center; font-size: 36px; position: relative; border-radius: 0; }
+    .light { background: #fef3c7; }
+    .dark { background: #b45309; }
+    .white-piece { color: white; text-shadow: 0 2px 4px rgba(0,0,0,.55); }
+    .black-piece { color: #020617; }
+    .selected { outline: 4px solid #60a5fa; z-index: 2; }
+    .legal::after { content: ""; width: 16px; height: 16px; border-radius: 50%; background: rgba(34,197,94,.85); position: absolute; }
+    .captured { background: #f8fafc; border-radius: 18px; padding: 14px; min-height: 94px; }
+    .pieces { font-size: 28px; min-height: 40px; }
+
+    .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 520px; margin: 0 auto; }
+    .memory-card { height: 86px; background: #334155; color: white; font-size: 38px; }
+    .memory-card.open { background: #d1fae5; color: #064e3b; }
+
+    .ttt-grid { display: grid; grid-template-columns: repeat(3, 96px); gap: 10px; justify-content: center; }
+    .ttt-cell { height: 96px; background: #eef2ff; color: var(--primary); font-size: 48px; font-weight: 950; }
+
+    .race-wrap { display: grid; grid-template-columns: 1fr 180px; gap: 18px; align-items: center; }
+    .road { position: relative; width: 260px; height: 390px; background: #1e293b; border-radius: 28px; margin: 0 auto; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,.35); }
+    .lane-line { position: absolute; top: 0; height: 100%; border-left: 4px dashed rgba(255,255,255,.32); }
+    .block, .car { position: absolute; width: 58px; height: 44px; display: grid; place-items: center; border-radius: 14px; font-size: 28px; }
+    .block { background: #fb7185; }
+    .car { bottom: 16px; background: #60a5fa; font-size: 36px; box-shadow: 0 8px 18px rgba(0,0,0,.25); }
+    .race-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+    .footer { margin-top: 16px; padding: 14px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 820px) {
+      body { padding: 10px; }
+      .nav { grid-template-columns: repeat(2, 1fr); }
+      .hero, .game-grid, .race-wrap { grid-template-columns: 1fr; }
+      .chess-board { grid-template-columns: repeat(8, min(11vw, 48px)); }
+      .square { width: min(11vw, 48px); height: min(11vw, 48px); font-size: min(8vw, 34px); }
+      .ttt-grid { grid-template-columns: repeat(3, min(28vw, 96px)); }
+      .ttt-cell { height: min(28vw, 96px); }
+      .road { width: min(88vw, 260px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <p class="eyebrow">MN bro's Gaming Dashboard</p>
+        <h1>Kids Gaming Dashboard</h1>
+        <p class="powered-by">Powered by Sethu</p>
+      </div>
+      <div class="controls">
+        <input id="playerName" placeholder="Player name" value="Champion" />
+        <button id="soundToggle" class="btn-outline">🔊 Sound On</button>
+      </div>
+    </header>
+
+    <nav class="nav" id="nav">
+      <button data-screen="home" class="active">🏠 Home</button>
+      <button data-screen="chess">♛ Chess</button>
+      <button data-screen="memory">🧠 Memory</button>
+      <button data-screen="tictactoe">🧩 Puzzle</button>
+      <button data-screen="race">🏎️ Car Race</button>
+    </nav>
+
+    <main>
+      <section id="home" class="screen card hero">
+        <div>
+          <div class="pill">✨ Kids-safe games dashboard</div>
+          <h1 style="margin-top:16px">Welcome, <span id="welcomeName">Champion</span>!</h1>
+          <p>Play chess against the computer, train memory, solve a quick puzzle, and race a tiny car. This is a fully standalone <strong>index.html</strong> file, ready for GitHub Pages.</p>
+          <div class="controls">
+            <button class="btn-light" data-jump="chess">♛ Play Chess</button>
+            <button class="btn-light" data-jump="memory">🧠 Play Memory</button>
+            <button class="btn-light" data-jump="tictactoe">🧩 Play Puzzle</button>
+            <button class="btn-light" data-jump="race">🏎️ Play Race</button>
+          </div>
+        </div>
+        <div class="hero-note">
+          <h3>GitHub setup</h3>
+          <ul>
+            <li>Save this file as <strong>index.html</strong>.</li>
+            <li>Upload it to a GitHub repository.</li>
+            <li>Enable GitHub Pages from repository settings.</li>
+            <li>No build tools, React setup, npm packages, or external sound files required.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="chess" class="screen card hidden">
+        <h2>♛ Chess: Human vs Computer</h2>
+        <div class="difficulty">
+          <strong>Computer difficulty:</strong>
+          <button data-level="easy" class="active">Easy</button>
+          <button data-level="medium">Medium</button>
+          <button data-level="hard">Hard</button>
+          <span class="small">Easy = random, Medium = better captures, Hard = safer stronger moves.</span>
+        </div>
+        <div class="game-grid">
+          <div id="chessBoard" class="chess-board"></div>
+          <div>
+            <div id="chessStatus" class="status">Your turn! You are the white pieces.</div>
+            <button id="resetChess" class="btn-outline">↻ Reset Chess</button>
+            <div class="captured" style="margin-top:12px">
+              <strong>Captured pieces</strong>
+              <div id="capturedPieces" class="pieces">None yet</div>
+            </div>
+            <p class="small" style="margin-top:12px">Kid mode uses simplified chess movement. Pawns promote to queens. Castling, check validation, and en passant are intentionally omitted for simplicity.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="memory" class="screen card hidden">
+        <h2>🧠 Memory Match</h2>
+        <div id="memoryStatus" class="status">Moves: 0</div>
+        <button id="resetMemory" class="btn-outline">↻ Reset Memory</button>
+        <div id="memoryGrid" class="memory-grid" style="margin-top:14px"></div>
+      </section>
+
+      <section id="tictactoe" class="screen card hidden">
+        <h2>🧩 Puzzle: Tic-Tac-Toe</h2>
+        <div id="tttStatus" class="status">X's turn</div>
+        <button id="resetTtt" class="btn-outline">↻ Reset Puzzle</button>
+        <div id="tttGrid" class="ttt-grid" style="margin-top:14px"></div>
+      </section>
+
+      <section id="race" class="screen card hidden">
+        <h2>🏎️ Car Race</h2>
+        <div id="raceStatus" class="status">Press Start Race</div>
+        <div class="race-wrap">
+          <div id="road" class="road">
+            <div class="lane-line" style="left:33.333%"></div>
+            <div class="lane-line" style="left:66.666%"></div>
+            <div id="car" class="car">🏎️</div>
+          </div>
+          <div class="race-buttons">
+            <button id="raceLeft" class="btn-outline">← Left</button>
+            <button id="raceStart" class="btn">Start Race</button>
+            <button id="raceRight" class="btn-outline">Right →</button>
+            <button id="raceReset" class="btn-outline">↻ Reset Race</button>
+            <p class="small">Use arrow keys or buttons. Dodge the blocks!</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">Powered by Sethu • Built for learning, focus, and family fun. Works offline after opening the file.</footer>
+  </div>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    let soundOn = true;
+    let audioCtx = null;
+    function playSound(type = "click") {
+      if (!soundOn) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const map = {
+        click: [520, .06, .035, "sine"], move: [440, .08, .04, "triangle"], capture: [220, .14, .055, "square"],
+        win: [760, .18, .06, "sine"], flip: [600, .07, .04, "triangle"], match: [880, .15, .05, "sine"],
+        race: [180, .055, .025, "sawtooth"], crash: [90, .24, .075, "square"]
+      };
+      const [freq, duration, gainValue, wave] = map[type] || map.click;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = wave;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + duration);
+      if (type === "win" || type === "match") {
+        setTimeout(() => playTone(freq * 1.25, .12, gainValue * .7), 80);
+      }
+    }
+    function playTone(freq, duration, gainValue) {
+      if (!soundOn || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function showScreen(id) {
+      $$(".screen").forEach(s => s.classList.toggle("hidden", s.id !== id));
+      $$("#nav button").forEach(b => b.classList.toggle("active", b.dataset.screen === id));
+      playSound("click");
+    }
+    $$("#nav button").forEach(b => b.onclick = () => showScreen(b.dataset.screen));
+    $$('[data-jump]').forEach(b => b.onclick = () => showScreen(b.dataset.jump));
+    $("#playerName").oninput = (e) => $("#welcomeName").textContent = e.target.value || "Champion";
+    $("#soundToggle").onclick = () => {
+      soundOn = !soundOn;
+      $("#soundToggle").textContent = soundOn ? "🔊 Sound On" : "🔇 Sound Off";
+      if (soundOn) playSound("click");
+    };
+
+    const PIECES = { r:"♜", n:"♞", b:"♝", q:"♛", k:"♚", p:"♟", R:"♖", N:"♘", B:"♗", Q:"♕", K:"♔", P:"♙" };
+    const VAL = { p:1, n:3, b:3, r:5, q:9, k:100 };
+    let board, selected, captured, difficulty = "easy";
+    function initialBoard() { return [["r","n","b","q","k","b","n","r"],["p","p","p","p","p","p","p","p"],["","","","","","","",""],["","","","","","","",""],["","","","","","","",""],["","","","","","","",""],["P","P","P","P","P","P","P","P"],["R","N","B","Q","K","B","N","R"]]; }
+    const isWhite = p => p && p === p.toUpperCase();
+    const inBounds = (r,c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+    const clone = b => b.map(row => [...row]);
+    function pseudoMoves(b, r, c) {
+      const piece = b[r][c]; if (!piece) return [];
+      const white = isWhite(piece), lower = piece.toLowerCase(), moves = [];
+      const add = (nr,nc) => { if(!inBounds(nr,nc)) return false; const t=b[nr][nc]; if(!t){moves.push([nr,nc]); return true;} if(isWhite(t)!==white) moves.push([nr,nc]); return false; };
+      if (lower === "p") { const dir = white ? -1 : 1, start = white ? 6 : 1; if(inBounds(r+dir,c)&&!b[r+dir][c]) moves.push([r+dir,c]); if(r===start&&!b[r+dir][c]&&!b[r+2*dir][c]) moves.push([r+2*dir,c]); [[dir,-1],[dir,1]].forEach(([dr,dc])=>{ const nr=r+dr,nc=c+dc; if(inBounds(nr,nc)&&b[nr][nc]&&isWhite(b[nr][nc])!==white) moves.push([nr,nc]); }); }
+      if (lower === "n") [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>add(r+dr,c+dc));
+      if (["b","r","q"].includes(lower)) { const dirs=[]; if(["b","q"].includes(lower)) dirs.push([-1,-1],[-1,1],[1,-1],[1,1]); if(["r","q"].includes(lower)) dirs.push([-1,0],[1,0],[0,-1],[0,1]); dirs.forEach(([dr,dc])=>{ let nr=r+dr,nc=c+dc; while(inBounds(nr,nc)){ if(!add(nr,nc)) break; nr+=dr; nc+=dc; } }); }
+      if (lower === "k") for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) if(dr||dc) add(r+dr,c+dc);
+      return moves;
+    }
+    function allMoves(b, whiteSide) { const moves=[]; for(let r=0;r<8;r++) for(let c=0;c<8;c++) if(b[r][c]&&isWhite(b[r][c])===whiteSide) pseudoMoves(b,r,c).forEach(([nr,nc])=>moves.push({from:[r,c],to:[nr,nc],capture:b[nr][nc],piece:b[r][c]})); return moves; }
+    function movePiece(b, from, to) { const n=clone(b), p=n[from[0]][from[1]]; n[to[0]][to[1]]=p; n[from[0]][from[1]]=""; if(p==="P"&&to[0]===0)n[to[0]][to[1]]="Q"; if(p==="p"&&to[0]===7)n[to[0]][to[1]]="q"; return n; }
+    function scoreMove(b,m) { const target=m.capture ? VAL[m.capture.toLowerCase()]||0 : 0; const piece=VAL[m.piece.toLowerCase()]||0; const center=4-(Math.abs(3.5-m.to[0])+Math.abs(3.5-m.to[1])); let score=target*10+center+Math.random(); if(difficulty==="medium") score += piece*.25; if(difficulty==="hard") { const after=movePiece(b,m.from,m.to); const replies=allMoves(after,true); const worst=Math.max(0,...replies.map(r=>r.capture ? VAL[r.capture.toLowerCase()]||0 : 0)); score += piece*.5 - worst*3; if(m.capture?.toLowerCase()==="k") score += 1000; } return score; }
+    function chooseComputerMove() { const moves=allMoves(board,false); if(!moves.length) return null; if(difficulty==="easy") return moves[Math.floor(Math.random()*moves.length)]; const ranked=moves.map(m=>({...m,score:scoreMove(board,m)})).sort((a,b)=>b.score-a.score); if(difficulty==="medium") return ranked[Math.floor(Math.random()*Math.min(3,ranked.length))]; return ranked[0]; }
+    function setChessStatus(t) { $("#chessStatus").textContent = t; }
+    function renderChess() {
+      const legal = selected ? pseudoMoves(board, selected[0], selected[1]) : [];
+      const isLegalSq = (r,c) => legal.some(([rr,cc]) => rr===r && cc===c);
+      $("#chessBoard").innerHTML = "";
+      for(let r=0;r<8;r++) for(let c=0;c<8;c++) {
+        const sq=document.createElement("button"); const p=board[r][c];
+        sq.className = `square ${(r+c)%2 ? "dark" : "light"} ${selected&&selected[0]===r&&selected[1]===c ? "selected" : ""} ${isLegalSq(r,c) ? "legal" : ""}`;
+        sq.innerHTML = `<span class="${isWhite(p)?"white-piece":"black-piece"}">${PIECES[p]||""}</span>`;
+        sq.onclick = () => chessClick(r,c);
+        $("#chessBoard").appendChild(sq);
+      }
+      $("#capturedPieces").textContent = captured.length ? captured.map(p => PIECES[p]).join(" ") : "None yet";
+    }
+    function chessClick(r,c) {
+      const p = board[r][c];
+      if (selected) {
+        const legal = pseudoMoves(board, selected[0], selected[1]);
+        if (legal.some(([rr,cc]) => rr===r && cc===c)) {
+          const taken = board[r][c]; board = movePiece(board, selected, [r,c]); selected = null; if(taken) captured.push(taken);
+          playSound(taken ? "capture" : "move"); renderChess();
+          if(taken?.toLowerCase()==="k") { setChessStatus("You captured the king! Great job!"); playSound("win"); return; }
+          setChessStatus(`Computer is thinking on ${difficulty} mode...`);
+          setTimeout(() => { const pick=chooseComputerMove(); if(!pick){setChessStatus("Computer has no moves. You win!"); playSound("win"); return;} const cap=pick.capture; board=movePiece(board,pick.from,pick.to); if(cap) captured.push(cap); renderChess(); playSound(cap ? "capture" : "move"); setChessStatus(cap?.toLowerCase()==="k" ? "Computer captured your king. Try again!" : "Your turn!"); }, difficulty==="hard" ? 700 : 450);
+          return;
+        }
+      }
+      if (p && isWhite(p)) { selected=[r,c]; setChessStatus("Pick a highlighted square to move."); playSound("click"); renderChess(); }
+    }
+    function resetChess() { board=initialBoard(); selected=null; captured=[]; setChessStatus("Your turn! You are the white pieces."); renderChess(); playSound("click"); }
+    $$("[data-level]").forEach(b => b.onclick = () => { difficulty=b.dataset.level; $$("[data-level]").forEach(x=>x.classList.toggle("active",x===b)); playSound("click"); });
+    $("#resetChess").onclick = resetChess;
+
+    let memoryDeck=[], memoryPick=[], memoryMoves=0;
+    function makeDeck() { return [..."🐶🐱🦊🐼🐸🦁", ..."🐶🐱🦊🐼🐸🦁"].sort(()=>Math.random()-.5).map((s,i)=>({id:i,s,open:false,done:false})); }
+    function renderMemory() { $("#memoryGrid").innerHTML=""; memoryDeck.forEach((card,i)=>{ const b=document.createElement("button"); b.className=`memory-card ${card.open||card.done?"open":""}`; b.textContent=card.open||card.done?card.s:"?"; b.onclick=()=>flipMemory(i); $("#memoryGrid").appendChild(b); }); $("#memoryStatus").textContent = memoryDeck.every(c=>c.done) ? `You found all pairs in ${memoryMoves} moves!` : `Moves: ${memoryMoves}`; }
+    function flipMemory(i) { const card=memoryDeck[i]; if(card.open||card.done||memoryPick.length===2) return; card.open=true; memoryPick.push(i); playSound("flip"); renderMemory(); if(memoryPick.length===2){ memoryMoves++; setTimeout(()=>{ const [a,b]=memoryPick, match=memoryDeck[a].s===memoryDeck[b].s; if(match){ memoryDeck[a].done=memoryDeck[b].done=true; playSound(memoryDeck.filter(c=>c.done).length===memoryDeck.length ? "win" : "match"); } else { memoryDeck[a].open=memoryDeck[b].open=false; } memoryPick=[]; renderMemory(); },650); } }
+    function resetMemory() { memoryDeck=makeDeck(); memoryPick=[]; memoryMoves=0; renderMemory(); playSound("click"); }
+    $("#resetMemory").onclick = resetMemory;
+
+    let tttCells=[], tttTurn="X"; const winLines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    function tttWinner() { return winLines.find(l => l.every(i => tttCells[i] && tttCells[i] === tttCells[l[0]])); }
+    function renderTtt() { const w=tttWinner(); $("#tttStatus").textContent = w ? `${tttCells[w[0]]} wins!` : tttCells.every(Boolean) ? "Draw — nice thinking!" : `${tttTurn}'s turn`; $("#tttGrid").innerHTML=""; tttCells.forEach((v,i)=>{ const b=document.createElement("button"); b.className="ttt-cell"; b.textContent=v; b.onclick=()=>playTtt(i); $("#tttGrid").appendChild(b); }); }
+    function playTtt(i) { if(tttCells[i]||tttWinner()) return; tttCells[i]=tttTurn; tttTurn=tttTurn==="X"?"O":"X"; const won=!!tttWinner(); renderTtt(); playSound(won ? "win" : "click"); }
+    function resetTtt() { tttCells=Array(9).fill(""); tttTurn="X"; renderTtt(); playSound("click"); }
+    $("#resetTtt").onclick = resetTtt;
+
+    let raceLane=1, raceBlocks=[], raceScore=0, raceRunning=false, raceCrashed=false, raceTimer=null;
+    const laneLeft = lane => `${lane*33.333 + 5}%`;
+    function renderRace() { $$(".block").forEach(b=>b.remove()); raceBlocks.forEach(bl=>{ const d=document.createElement("div"); d.className="block"; d.textContent="🚧"; d.style.left=laneLeft(bl.lane); d.style.top=bl.y+"%"; $("#road").appendChild(d); }); $("#car").style.left=laneLeft(raceLane); $("#raceStatus").textContent = raceCrashed ? `Crash! Score: ${raceScore}` : raceRunning ? `Score: ${raceScore}` : "Press Start Race"; $("#raceStart").disabled = raceRunning || raceCrashed; }
+    function raceStep() { raceBlocks = raceBlocks.map(b=>({...b,y:b.y+8})).filter(b=>b.y<100); if(!raceBlocks.length || raceBlocks[raceBlocks.length-1].y>30) raceBlocks.push({lane:Math.floor(Math.random()*3), y:0}); raceScore++; if(raceBlocks.some(b=>b.lane===raceLane && b.y>76 && b.y<94)){ raceCrashed=true; raceRunning=false; clearInterval(raceTimer); playSound("crash"); } renderRace(); }
+    function startRace() { if(raceRunning||raceCrashed) return; raceRunning=true; playSound("click"); raceTimer=setInterval(raceStep,180); renderRace(); }
+    function resetRace() { raceLane=1; raceBlocks=[{lane:Math.floor(Math.random()*3),y:0}]; raceScore=0; raceRunning=false; raceCrashed=false; clearInterval(raceTimer); playSound("click"); renderRace(); }
+    function moveRace(dir) { raceLane=Math.max(0,Math.min(2,raceLane+dir)); playSound("race"); renderRace(); }
+    $("#raceStart").onclick=startRace; $("#raceReset").onclick=resetRace; $("#raceLeft").onclick=()=>moveRace(-1); $("#raceRight").onclick=()=>moveRace(1);
+    window.addEventListener("keydown", e => { if($("#race").classList.contains("hidden")) return; if(e.key==="ArrowLeft") moveRace(-1); if(e.key==="ArrowRight") moveRace(1); });
+
+    resetChess(); resetMemory(); resetTtt(); resetRace();
+  </script>
+</body>
+</html>
